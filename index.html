@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quizz Copas – Copa do Mundo 2022</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif; color: #1b1b1b;
+    background: linear-gradient(135deg, #0b6e4f, #08415c);
+    padding: 16px;
+  }
+  .card {
+    background: #fff; width: 100%; max-width: 640px; border-radius: 16px;
+    padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; color: #08415c; }
+  .sub { margin: 0 0 20px; color: #666; }
+  .progress { height: 8px; background: #e4e9ec; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .progress > div { height: 100%; width: 0; background: #0b6e4f; transition: width .3s; }
+  .counter { font-size: .85rem; color: #666; margin-bottom: 16px; }
+  .question { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; }
+  .options { display: grid; gap: 10px; }
+  .option {
+    text-align: left; font-size: 1rem; padding: 12px 14px; border: 2px solid #d5dde2;
+    border-radius: 10px; background: #fff; cursor: pointer; transition: .15s;
+  }
+  .option:hover:not(:disabled) { border-color: #0b6e4f; background: #f1faf6; }
+  .option:disabled { cursor: default; }
+  .option.correct { border-color: #1a9d5a; background: #dff6e9; }
+  .option.wrong { border-color: #d64545; background: #fde5e5; }
+  .feedback { min-height: 24px; margin: 14px 0 0; font-weight: 600; }
+  .btn {
+    margin-top: 16px; padding: 12px 22px; font-size: 1rem; font-weight: 600; border: 0;
+    border-radius: 10px; background: #0b6e4f; color: #fff; cursor: pointer;
+  }
+  .btn:hover { background: #09593f; }
+  .hidden { display: none; }
+  .result { text-align: center; }
+  .score { font-size: 3rem; font-weight: 700; color: #0b6e4f; margin: 8px 0; }
+  .msg { font-size: 1.1rem; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>⚽ Quizz Copas</h1>
+  <p class="sub">Copa do Mundo de futebol masculino – Catar 2022</p>
+
+  <section id="quiz">
+    <div class="progress"><div id="bar"></div></div>
+    <div class="counter" id="counter"></div>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <p class="feedback" id="feedback"></p>
+    <button class="btn hidden" id="next">Próxima</button>
+  </section>
+
+  <section id="result" class="result hidden">
+    <div class="score" id="score"></div>
+    <p class="msg" id="msg"></p>
+    <button class="btn" id="restart">Refazer o quiz</button>
+  </section>
+</main>
+
+<script>
+const questions = [
+  { q: "Qual país sediou a Copa do Mundo de 2022?", options: ["Catar", "Rússia", "Emirados Árabes Unidos", "Arábia Saudita"], answer: 0 },
+  { q: "Quem foi o campeão da Copa do Mundo de 2022?", options: ["França", "Argentina", "Croácia", "Marrocos"], answer: 1 },
+  { q: "Qual foi o placar da final entre Argentina e França (após a prorrogação)?", options: ["2 x 1", "3 x 0", "3 x 3", "4 x 2"], answer: 2 },
+  { q: "Como a Argentina venceu a final de 2022?", options: ["Gol de ouro na prorrogação", "Nos pênaltis (4 x 2)", "No tempo normal", "Nos pênaltis (5 x 4)"], answer: 1 },
+  { q: "Quem foi o artilheiro da Copa de 2022, com 8 gols?", options: ["Lionel Messi", "Olivier Giroud", "Kylian Mbappé", "Julián Álvarez"], answer: 2 },
+  { q: "Quem foi eleito o melhor jogador (Bola de Ouro) da Copa de 2022?", options: ["Lionel Messi", "Kylian Mbappé", "Luka Modrić", "Antoine Griezmann"], answer: 0 },
+  { q: "Qual seleção africana chegou pela primeira vez a uma semifinal de Copa do Mundo em 2022?", options: ["Senegal", "Gana", "Camarões", "Marrocos"], answer: 3 },
+  { q: "Qual seleção eliminou o Brasil nas quartas de final de 2022?", options: ["Croácia", "Argentina", "Holanda", "Marrocos"], answer: 0 },
+  { q: "Quem ficou com o terceiro lugar na Copa de 2022?", options: ["Marrocos", "Inglaterra", "Croácia", "Holanda"], answer: 2 },
+  { q: "Qual seleção venceu a Argentina na estreia, em uma das maiores zebras da Copa de 2022?", options: ["Arábia Saudita", "México", "Polônia", "Tunísia"], answer: 0 }
+];
+
+const $ = id => document.getElementById(id);
+let order, current, score, answered;
+
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function start() {
+  order = shuffle(questions.map((_, i) => i));
+  current = 0; score = 0;
+  $("result").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  show();
+}
+
+function show() {
+  answered = false;
+  const item = questions[order[current]];
+  $("counter").textContent = `Pergunta ${current + 1} de ${questions.length}`;
+  $("bar").style.width = `${(current / questions.length) * 100}%`;
+  $("question").textContent = item.q;
+  $("feedback").textContent = "";
+  $("next").classList.add("hidden");
+  $("next").textContent = current === questions.length - 1 ? "Ver resultado" : "Próxima";
+  const box = $("options");
+  box.innerHTML = "";
+  item.options.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.className = "option";
+    b.textContent = text;
+    b.onclick = () => choose(i);
+    box.appendChild(b);
+  });
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  const item = questions[order[current]];
+  const buttons = $("options").children;
+  [...buttons].forEach(b => b.disabled = true);
+  buttons[item.answer].classList.add("correct");
+  if (i === item.answer) {
+    score++;
+    $("feedback").textContent = "✅ Resposta correta!";
+  } else {
+    buttons[i].classList.add("wrong");
+    $("feedback").textContent = "❌ Resposta incorreta.";
+  }
+  $("next").classList.remove("hidden");
+}
+
+function finish() {
+  $("quiz").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  $("score").textContent = `${score} / ${questions.length}`;
+  $("msg").textContent =
+    score === 10 ? "🏆 Perfeito! Você é um craque das Copas!" :
+    score >= 7 ? "👏 Muito bem! Você manja de Copa do Mundo." :
+    score >= 4 ? "🙂 Bom jogo, mas dá para melhorar." :
+    "😅 Vale rever a Copa de 2022 e tentar de novo!";
+}
+
+$("next").onclick = () => {
+  current++;
+  current < questions.length ? show() : finish();
+};
+$("restart").onclick = start;
+start();
+</script>
+</body>
+</html>
