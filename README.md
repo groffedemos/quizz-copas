@@ -6,9 +6,18 @@ Quiz interativo com 10 perguntas sobre a Copa do Mundo de futebol masculino da F
 
 ```
 quizz-copas/
-├── index.html   # Aplicação completa (HTML + CSS + JavaScript) em um único arquivo
-└── README.md    # Este documento
+├── .github/workflows/pages.yml   # Deploy automático no GitHub Pages
+├── index.html                    # Aplicação completa (HTML + CSS + JavaScript) em um único arquivo
+└── README.md                     # Este documento
 ```
+
+## Site publicado
+
+https://groffedemos.github.io/quizz-copas/
+
+## Deploy (GitHub Pages)
+
+A cada push na `main` (ou manualmente via *Actions > Deploy GitHub Pages > Run workflow*), o workflow `pages.yml` publica o `index.html` no GitHub Pages. A fonte do Pages está configurada como **GitHub Actions**.
 
 ## Como funciona
 
