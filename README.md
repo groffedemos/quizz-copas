@@ -16,6 +16,7 @@ quizz-copas/
 - Ao escolher uma alternativa, o quiz indica se a resposta está correta e destaca a resposta certa.
 - Uma barra de progresso mostra o andamento.
 - Ao final é exibida a pontuação (acertos de 10) e uma mensagem de resultado.
+- Há um botão no canto do card para alternar entre o **modo normal** e o **modo dark**. A escolha é salva no `localStorage`; na primeira visita é usado o tema do sistema (`prefers-color-scheme`).
 - O botão **Refazer o quiz** reinicia o jogo, embaralhando a ordem das perguntas.
 
 ## Como executar

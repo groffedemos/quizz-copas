@@ -3,49 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.dataset.theme=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")</script>
 <title>Quizz Copas – Copa do Mundo 2022</title>
 <style>
+  :root {
+    --bg1: #0b6e4f; --bg2: #08415c; --card: #fff; --text: #1b1b1b; --title: #08415c;
+    --muted: #666; --track: #e4e9ec; --accent: #0b6e4f; --accent-hover: #09593f;
+    --border: #d5dde2; --opt-bg: #fff; --opt-hover: #f1faf6;
+    --ok-border: #1a9d5a; --ok-bg: #dff6e9; --bad-border: #d64545; --bad-bg: #fde5e5;
+  }
+  [data-theme="dark"] {
+    --bg1: #07281f; --bg2: #061b29; --card: #1c2430; --text: #e8edf2; --title: #8fd3b6;
+    --muted: #a3afbc; --track: #34404f; --accent: #2fb985; --accent-hover: #4ccf9d;
+    --border: #3b4757; --opt-bg: #242e3b; --opt-hover: #2b3a47;
+    --ok-border: #3ec783; --ok-bg: #17402e; --bad-border: #ef6b6b; --bad-bg: #4a2327;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    font-family: "Segoe UI", Roboto, Arial, sans-serif; color: #1b1b1b;
-    background: linear-gradient(135deg, #0b6e4f, #08415c);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif; color: var(--text);
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
     padding: 16px;
   }
   .card {
-    background: #fff; width: 100%; max-width: 640px; border-radius: 16px;
-    padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    position: relative; background: var(--card); width: 100%; max-width: 640px; border-radius: 16px;
+    padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.35); transition: background .2s;
   }
-  h1 { margin: 0 0 4px; font-size: 1.6rem; color: #08415c; }
-  .sub { margin: 0 0 20px; color: #666; }
-  .progress { height: 8px; background: #e4e9ec; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
-  .progress > div { height: 100%; width: 0; background: #0b6e4f; transition: width .3s; }
-  .counter { font-size: .85rem; color: #666; margin-bottom: 16px; }
+  .theme-toggle {
+    position: absolute; top: 16px; right: 16px; padding: 6px 12px; font-size: .85rem;
+    border: 2px solid var(--border); border-radius: 20px; background: var(--opt-bg);
+    color: var(--text); cursor: pointer;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; color: var(--title); }
+  .sub { margin: 0 0 20px; color: var(--muted); }
+  .progress { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .counter { font-size: .85rem; color: var(--muted); margin-bottom: 16px; }
   .question { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; }
   .options { display: grid; gap: 10px; }
   .option {
-    text-align: left; font-size: 1rem; padding: 12px 14px; border: 2px solid #d5dde2;
-    border-radius: 10px; background: #fff; cursor: pointer; transition: .15s;
+    text-align: left; font-size: 1rem; padding: 12px 14px; border: 2px solid var(--border);
+    border-radius: 10px; background: var(--opt-bg); color: var(--text); cursor: pointer; transition: .15s;
   }
-  .option:hover:not(:disabled) { border-color: #0b6e4f; background: #f1faf6; }
+  .option:hover:not(:disabled) { border-color: var(--accent); background: var(--opt-hover); }
   .option:disabled { cursor: default; }
-  .option.correct { border-color: #1a9d5a; background: #dff6e9; }
-  .option.wrong { border-color: #d64545; background: #fde5e5; }
+  .option.correct { border-color: var(--ok-border); background: var(--ok-bg); }
+  .option.wrong { border-color: var(--bad-border); background: var(--bad-bg); }
   .feedback { min-height: 24px; margin: 14px 0 0; font-weight: 600; }
   .btn {
     margin-top: 16px; padding: 12px 22px; font-size: 1rem; font-weight: 600; border: 0;
     border-radius: 10px; background: #0b6e4f; color: #fff; cursor: pointer;
   }
   .btn:hover { background: #09593f; }
+  [data-theme="dark"] .btn { background: #1f8f66; }
+  [data-theme="dark"] .btn:hover { background: #26a577; }
   .hidden { display: none; }
   .result { text-align: center; }
-  .score { font-size: 3rem; font-weight: 700; color: #0b6e4f; margin: 8px 0; }
+  .score { font-size: 3rem; font-weight: 700; color: var(--accent); margin: 8px 0; }
   .msg { font-size: 1.1rem; margin-bottom: 8px; }
 </style>
 </head>
 <body>
 <main class="card">
-  <h1>⚽ Quizz Copas</h1>
+  <button class="theme-toggle" id="theme" type="button"></button>
+  <h1 style="padding-right:110px">⚽ Quizz Copas</h1>
   <p class="sub">Copa do Mundo de futebol masculino – Catar 2022</p>
 
   <section id="quiz">
@@ -150,6 +172,18 @@ $("next").onclick = () => {
   current++;
   current < questions.length ? show() : finish();
 };
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $("theme").textContent = t === "dark" ? "☀️ Modo normal" : "🌙 Modo dark";
+  $("theme").setAttribute("aria-label", t === "dark" ? "Alternar para o modo normal" : "Alternar para o modo dark");
+}
+$("theme").onclick = () => {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", t);
+  applyTheme(t);
+};
+applyTheme(document.documentElement.dataset.theme);
 $("restart").onclick = start;
 start();
 </script>
